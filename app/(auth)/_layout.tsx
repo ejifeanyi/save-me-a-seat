@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 
 export const unstable_settings = {
-  initialRouteName: 'log-in',
+  anchor: 'log-in',
 };
 
 export default function AuthLayout() {

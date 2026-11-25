@@ -1,10 +1,11 @@
-import { useCallback, useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, Alert, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors } from '../../../lib/theme';
+import { getProfileData, updateProfileName, uploadAvatar } from '../../../lib/profile';
 import { screenStyles } from '../../../lib/screenStyles';
-import { getProfileData, updateProfileName } from '../../../lib/profile';
+import { colors } from '../../../lib/theme';
 
 function initials(fullName: string) {
   return fullName.trim().split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? '').join('');
@@ -13,8 +14,10 @@ function initials(fullName: string) {
 export default function EditProfile() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useFocusEffect(
@@ -22,10 +25,38 @@ export default function EditProfile() {
       getProfileData().then((p) => {
         setFullName(p.full_name);
         setEmail(p.email);
+        setAvatarUrl(p.avatar_url);
         setLoading(false);
       });
     }, [])
   );
+
+  async function handleChangePhoto() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission needed', 'Allow photo library access to change your profile photo.');
+      return;
+    }
+
+   const result = await ImagePicker.launchImageLibraryAsync({
+  mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  allowsEditing: true,
+  aspect: [1, 1],
+  quality: 0.7,
+});
+    if (result.canceled) return;
+
+    setUploadingPhoto(true);
+    setError(null);
+    try {
+      const newUrl = await uploadAvatar(result.assets[0].uri);
+      setAvatarUrl(newUrl);
+    } catch (e: any) {
+      setError(e.message ?? 'Could not upload photo');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
 
   async function handleSave() {
     setError(null);
@@ -63,11 +94,19 @@ export default function EditProfile() {
 
         <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
           <View style={styles.avatar}>
-            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 18, color: colors.primary }}>
-              {initials(fullName)}
-            </Text>
+            {avatarUrl ? (
+              <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+            ) : (
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 18, color: colors.primary }}>
+                {initials(fullName)}
+              </Text>
+            )}
           </View>
-          <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 15, color: colors.primary }}>Change photo</Text>
+          <Pressable onPress={handleChangePhoto} disabled={uploadingPhoto}>
+            <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 15, color: colors.primary }}>
+              {uploadingPhoto ? 'Uploading...' : 'Change photo'}
+            </Text>
+          </Pressable>
         </View>
 
         <View style={{ gap: 6 }}>
@@ -95,5 +134,6 @@ export default function EditProfile() {
 }
 
 const styles = StyleSheet.create({
-  avatar: { width: 56, height: 56, borderRadius: 999, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 56, height: 56, borderRadius: 999, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatarImage: { width: 56, height: 56 },
 });
