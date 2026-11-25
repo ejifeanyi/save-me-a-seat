@@ -116,6 +116,11 @@ export async function endEventEarly(id: string) {
   if (error) throw error;
 }
 
+export async function deleteEvent(eventId: string) {
+  const { error } = await supabase.from('events').delete().eq('id', eventId);
+  if (error) throw error;
+}
+
 export function formatEventDateTime(iso: string) {
   const d = new Date(iso);
   const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
@@ -130,4 +135,46 @@ export function statusLabel(status: string): 'UPCOMING' | 'LIVE' | 'ENDED' {
   if (status === 'live') return 'LIVE';
   if (status === 'ended') return 'ENDED';
   return 'UPCOMING';
+}
+
+export type UpdateEventInput = {
+  name: string;
+  venue: string;
+  description: string | null;
+  starts_at: string; // ISO
+  ends_at: string; // ISO
+  invitationAsset?: { uri: string; fileName: string; mimeType: string } | null; // only when changed
+};
+
+export async function updateEvent(eventId: string, input: UpdateEventInput) {
+  let invitation_url: string | undefined;
+
+  if (input.invitationAsset) {
+    const { uri, fileName, mimeType } = input.invitationAsset;
+    const ext = fileName.split('.').pop() ?? 'jpg';
+    const path = `${eventId}/${Date.now()}.${ext}`;
+    const response = await fetch(uri);
+    const blob = await response.blob();
+
+    const { error: uploadError } = await supabase.storage
+      .from('invitations')
+      .upload(path, blob, { contentType: mimeType, upsert: true });
+    if (uploadError) throw uploadError;
+
+    const { data: publicUrl } = supabase.storage.from('invitations').getPublicUrl(path);
+    invitation_url = publicUrl.publicUrl;
+  }
+
+  const { error } = await supabase
+    .from('events')
+    .update({
+      name: input.name.trim(),
+      venue: input.venue.trim() || null,
+      description: input.description?.trim() || null,
+      starts_at: input.starts_at,
+      ends_at: input.ends_at,
+      ...(invitation_url ? { invitation_url } : {}),
+    })
+    .eq('id', eventId);
+  if (error) throw error;
 }

@@ -4,6 +4,7 @@ import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Tex
 import { BottomTabBar } from '../../../components/BottomTabBar';
 import { StatusBadge } from '../../../components/StatusBadge';
 import { formatEventDateTime, listMyEvents, statusLabel } from '../../../lib/events';
+import { getProfileData } from '../../../lib/profile';
 import { colors, LOGO_GLYPH, radius, spacing, type } from '../../../lib/theme';
 import type { EventWithCounts } from '../../../lib/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,11 +13,15 @@ export default function EventsList() {
   const [events, setEvents] = useState<EventWithCounts[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [profileName, setProfileName] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
       const data = await listMyEvents();
       setEvents(data);
+      getProfileData()
+        .then((p) => setProfileName(p.full_name))
+        .catch(() => {});
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -40,7 +45,7 @@ export default function EventsList() {
   if (events.length === 0) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <Header />
+        <Header name={profileName} />
         <View style={styles.emptyWrap}>
           <View style={styles.emptyCircle}>
             <Text style={styles.emptyGlyph}>{LOGO_GLYPH}</Text>
@@ -62,7 +67,7 @@ export default function EventsList() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <Header />
+      <Header name={profileName} />
       <FlatList
         data={events}
         keyExtractor={(item) => item.id}
@@ -103,12 +108,12 @@ export default function EventsList() {
   );
 }
 
-function Header() {
+function Header({ name }: { name: string | null }) {
   return (
     <View style={styles.headerRow}>
       <View style={{ gap: 2 }}>
         <Text style={type.h1}>Your Events</Text>
-        <Text style={type.caption}>Super admin · Ifeanyi</Text>
+        <Text style={type.caption}>Super admin · {name?.trim().split(' ')[0] ?? ''}</Text>
       </View>
       <Pressable style={styles.avatar} onPress={() => router.push('/(admin)/profile')} />
     </View>

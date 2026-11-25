@@ -73,6 +73,10 @@ export default function SignUp() {
         <Text style={type.caption}>Already have an account? </Text>
         <Link href="/(auth)/log-in"><Text style={[type.caption, styles.link]}>Log In</Text></Link>
       </View>
+
+      <Pressable style={{ alignSelf: 'center' }} onPress={() => router.replace('/(guest)')}>
+        <Text style={[type.caption, styles.link]}>← Back to invitation code</Text>
+      </Pressable>
     </SafeAreaView>
   );
 }

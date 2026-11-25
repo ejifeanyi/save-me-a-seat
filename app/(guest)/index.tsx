@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, type, radius, spacing, LOGO_GLYPH } from '../../lib/theme';
 import { useGuestSession } from '../../lib/store/guestSession';
 
@@ -10,6 +10,7 @@ function formatCode(code: string) {
 }
 
 export default function GuestCodeEntry() {
+  const insets = useSafeAreaInsets();
   const { redeem } = useGuestSession();
   const [rawCode, setRawCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -34,8 +35,8 @@ export default function GuestCodeEntry() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <Pressable style={styles.adminLink} onPress={() => router.push('/(auth)/log-in')} hitSlop={10}>
+    <View style={[styles.container, { paddingTop: insets.top + spacing.xl, paddingBottom: insets.bottom + spacing.xl }]}>
+      <Pressable style={[styles.adminLink, { top: insets.top + spacing.lg }]} onPress={() => router.push('/(auth)/log-in')} hitSlop={10}>
         <Text style={styles.adminLinkText}>Admin</Text>
       </Pressable>
 
@@ -76,7 +77,7 @@ export default function GuestCodeEntry() {
       </Pressable>
 
       <Text style={[type.caption, styles.center, { color: colors.primary }]}>Didn't get a code? Contact your host</Text>
-    </SafeAreaView>
+    </View>
   );
 }
 

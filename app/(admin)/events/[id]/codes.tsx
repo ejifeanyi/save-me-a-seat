@@ -44,6 +44,10 @@ export default function GuestCodesList() {
         <Text style={styles.backLink}>← {event.name}</Text>
       </Pressable>
 
+      <Pressable onPress={() => router.push(`/(admin)/events/${id}/export`)}>
+        <Text style={[type.caption, { color: colors.primary }]}>Export Guest Codes</Text>
+      </Pressable>
+
       <View style={{ gap: 2, marginBottom: spacing.md }}>
         <Text style={type.h1}>Guest Codes</Text>
         <Text style={type.caption}>

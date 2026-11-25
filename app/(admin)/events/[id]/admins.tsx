@@ -7,6 +7,7 @@ import { colors, type, radius, spacing } from '../../../../lib/theme';
 import { getEvent } from '../../../../lib/events';
 import { listEventAdmins, inviteEventAdmin, removeEventAdmin } from '../../../../lib/admin';
 import type { EventWithCounts, EventAdmin } from '../../../../lib/types';
+import { ConfirmSheet } from '../../../../components/ConfirmSheet';
 
 export default function ManageAdmins() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -16,6 +17,7 @@ export default function ManageAdmins() {
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [removeTarget, setRemoveTarget] = useState<EventAdmin | null>(null);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -49,22 +51,7 @@ export default function ManageAdmins() {
   }
 
   function confirmRemove(admin: EventAdmin) {
-    const displayName = admin.profile_full_name || admin.invited_email;
-    Alert.alert(
-      `Remove ${displayName}?`,
-      "They'll immediately lose access to scan codes or view guest data for this event.",
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove Admin',
-          style: 'destructive',
-          onPress: async () => {
-            await removeEventAdmin(event!.id, admin.invited_email);
-            load();
-          },
-        },
-      ]
-    );
+    setRemoveTarget(admin);
   }
 
   async function copyInviteCode(admin: EventAdmin) {
@@ -145,6 +132,21 @@ export default function ManageAdmins() {
       <Text style={[type.caption, { textAlign: 'center' }]}>
         Tap a pending invite to copy its code · long-press any row to remove
       </Text>
+
+      <ConfirmSheet
+        visible={!!removeTarget}
+        onClose={() => setRemoveTarget(null)}
+        icon="close"
+        title={`Remove ${removeTarget?.profile_full_name || removeTarget?.invited_email || 'admin'}?`}
+        body="They'll immediately lose access to scan codes or view guest data for this event."
+        confirmLabel="Remove Admin"
+        onConfirm={async () => {
+          if (!removeTarget) return;
+          await removeEventAdmin(event.id, removeTarget.invited_email);
+          setRemoveTarget(null);
+          load();
+        }}
+      />
     </SafeAreaView>
   );
 }

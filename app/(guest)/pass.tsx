@@ -49,6 +49,9 @@ export default function GuestPass() {
         </View>
         <View style={styles.thanksCard}>
           <Text style={[type.bodyMediumPrimary, { color: colors.textSecondary }]}>Thank you for celebrating with us</Text>
+          {event.description ? (
+            <Text style={[type.caption, { color: colors.textSecondary }]}>— {event.description}</Text>
+          ) : null}
         </View>
       </SafeAreaView>
     );

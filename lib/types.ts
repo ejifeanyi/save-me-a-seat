@@ -40,3 +40,12 @@ export type EventAdmin = {
   accepted_at: string | null;
   profile_full_name: string | null;
 };
+
+export type CheckinExportRow = {
+  label: string | null;
+  code: string;
+  status: 'admitted' | 'not_admitted';
+  checked_in_at: string | null;
+  scanned_by_name: string | null;
+  is_override: boolean;
+};

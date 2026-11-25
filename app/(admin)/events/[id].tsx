@@ -1,17 +1,22 @@
 import { useCallback, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, type, radius, spacing } from '../../../lib/theme';
-import { getEvent, formatEventDateTime, statusLabel, endEventEarly } from '../../../lib/events';
+import { getEvent, formatEventDateTime, statusLabel, endEventEarly, deleteEvent } from '../../../lib/events';
 import type { EventWithCounts } from '../../../lib/types';
 import { StatusBadge } from '../../../components/StatusBadge';
+import { ConfirmSheet } from '../../../components/ConfirmSheet';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function EventDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [event, setEvent] = useState<EventWithCounts | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [ending, setEnding] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -35,20 +40,6 @@ export default function EventDetail() {
   }
 
   const codesLeft = event.guest_cap - event.issued_count;
-
-  function confirmEndEarly() {
-    Alert.alert('End event early?', 'Guests will no longer be able to check in.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'End Event',
-        style: 'destructive',
-        onPress: async () => {
-          await endEventEarly(event!.id);
-          load();
-        },
-      },
-    ]);
-  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -105,10 +96,55 @@ export default function EventDetail() {
       <View style={{ flex: 1 }} />
 
       {event.status !== 'ended' && (
-        <Pressable style={styles.dangerButton} onPress={confirmEndEarly}>
+        <Pressable style={styles.dangerButton} onPress={() => setShowEndConfirm(true)}>
           <Text style={[type.bodyMedium, { color: colors.danger }]}>End Event Early</Text>
         </Pressable>
       )}
+
+      <Pressable style={styles.dangerButton} onPress={() => setShowDeleteConfirm(true)}>
+        <Text style={[type.bodyMedium, { color: colors.danger }]}>Delete Event</Text>
+      </Pressable>
+
+      <ConfirmSheet
+        visible={showEndConfirm}
+        onClose={() => setShowEndConfirm(false)}
+        icon="alert"
+        title="End this event now?"
+        body="Scanning will stop immediately and no further guests can be admitted. This can't be undone."
+        confirmLabel="Yes, End Event"
+        confirming={ending}
+        onConfirm={async () => {
+          setEnding(true);
+          try {
+            await endEventEarly(event.id);
+            setShowEndConfirm(false);
+            router.back();
+          } finally {
+            setEnding(false);
+          }
+        }}
+      />
+
+      <ConfirmSheet
+        visible={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        icon="delete"
+        title={`Delete ${event.name}?`}
+        body="All guest codes, invitations, and check-in history for this event will be permanently removed. This can't be undone."
+        confirmLabel="Delete Event Permanently"
+        requireTypedConfirmation="DELETE"
+        confirming={deleting}
+        onConfirm={async () => {
+          setDeleting(true);
+          try {
+            await deleteEvent(event.id);
+            setShowDeleteConfirm(false);
+            router.replace('/(admin)/events');
+          } finally {
+            setDeleting(false);
+          }
+        }}
+      />
     </SafeAreaView>
   );
 }

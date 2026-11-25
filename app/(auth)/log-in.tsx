@@ -67,6 +67,10 @@ export default function LogIn() {
       <Pressable onPress={() => router.push('/(auth)/accept-invite')}>
         <Text style={[type.caption, styles.link]}>Have an admin invite code?</Text>
       </Pressable>
+
+      <Pressable style={{ alignSelf: 'center' }} onPress={() => router.replace('/(guest)')}>
+        <Text style={[type.caption, styles.link]}>← Back to invitation code</Text>
+      </Pressable>
     </SafeAreaView>
   );
 }
