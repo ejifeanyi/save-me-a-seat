@@ -19,3 +19,12 @@ export type EventWithCounts = EventRow & {
   issued_count: number;
   checked_in_count: number;
 };
+
+export type GuestCode = {
+  id: string;
+  event_id: string;
+  code: string;
+  label: string | null;
+  checked_in_at: string | null;
+  created_at: string;
+};
