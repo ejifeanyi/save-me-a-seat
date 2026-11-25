@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { View, Text, Pressable, Linking } from 'react-native';
-import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../../lib/theme';
+import { router } from 'expo-router';
+import { useState } from 'react';
+import { Linking, Pressable, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { screenStyles } from '../../../lib/screenStyles';
+import { colors } from '../../../lib/theme';
 
 const FAQS = [
   {
