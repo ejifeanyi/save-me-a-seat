@@ -11,6 +11,7 @@ export const colors = {
   danger: '#c8352e',
   success: '#1e8e5a',
   successSoft: '#e1f5ea',
+  dangerSoft: '#fbe6e4',
 };
 
 export const radius = {

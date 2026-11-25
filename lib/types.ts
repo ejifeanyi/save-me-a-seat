@@ -28,3 +28,15 @@ export type GuestCode = {
   checked_in_at: string | null;
   created_at: string;
 };
+
+export type EventAdmin = {
+  event_id: string;
+  user_id: string | null;
+  invited_email: string;
+  invited_by: string | null;
+  invite_token: string;
+  invited_at: string;
+  invite_expires_at: string;
+  accepted_at: string | null;
+  profile_full_name: string | null;
+};

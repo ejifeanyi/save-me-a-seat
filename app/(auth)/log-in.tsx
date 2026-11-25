@@ -1,10 +1,10 @@
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { PasswordField } from '../../components/PasswordField';
 import { useAuth } from '../../lib/store/auth';
 import { colors, LOGO_GLYPH, radius, spacing, type } from '../../lib/theme';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LogIn() {
   const { logIn } = useAuth();
@@ -63,6 +63,10 @@ export default function LogIn() {
         <Text style={type.caption}>New here? </Text>
         <Link href="/(auth)/sign-up"><Text style={[type.caption, styles.link]}>Create an account</Text></Link>
       </View>
+
+      <Pressable onPress={() => router.push('/(auth)/accept-invite')}>
+        <Text style={[type.caption, styles.link]}>Have an admin invite code?</Text>
+      </Pressable>
     </SafeAreaView>
   );
 }

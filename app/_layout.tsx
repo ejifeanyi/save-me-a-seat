@@ -6,13 +6,16 @@ import {
   useFonts,
 } from '@expo-google-fonts/inter';
 import { Stack } from 'expo-router';
+import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { colors } from '../lib/theme';
 import { useAuth } from '../lib/store/auth';
+import { restoreGuestSession, useGuestSession } from '../lib/store/guestSession';
+import { colors } from '../lib/theme';
 
 export default function RootLayout() {
-  const { session, initializing } = useAuth();
+  const { session, initializing: authInitializing } = useAuth();
+  const { initializing: guestInitializing } = useGuestSession();
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -20,7 +23,11 @@ export default function RootLayout() {
     Inter_700Bold,
   });
 
-  if (initializing || !fontsLoaded) {
+  useEffect(() => {
+    restoreGuestSession();
+  }, []);
+
+  if (authInitializing || guestInitializing || !fontsLoaded) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
         <ActivityIndicator color={colors.primary} />
@@ -31,12 +38,8 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <Stack screenOptions={{ headerShown: false }}>
-        {!session ? (
-          <Stack.Screen name="(auth)" />
-        ) : (
-          <Stack.Screen name="(admin)" />
-        )}
-        <Stack.Screen name="(guest)" />
+        {session ? <Stack.Screen name="(admin)" /> : <Stack.Screen name="(guest)" />}
+        <Stack.Screen name="(auth)" />
       </Stack>
     </SafeAreaProvider>
   );
